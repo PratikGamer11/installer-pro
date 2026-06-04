@@ -7,81 +7,55 @@
 # ----------------------------------------------------------------------------
 # CONFIG & CONSTANTS
 # ----------------------------------------------------------------------------
-# ANSI Color Codes
+
 CLR_RESET="\033[0m"
 CLR_RED="\033[0;31m"
 CLR_GREEN="\033[0;32m"
 CLR_YELLOW="\033[1;33m"
-CLR_BLUE="\033[0;34m"
 CLR_CYAN="\033[0;36m"
 CLR_PURPLE="\033[0;35m"
 CLR_WHITE="\033[1;37m"
 
-# Box Characters
 BOX_H="█"
 BOX_EMPTY=" "
-
-# Application State
-APP_NAME="GT Installer"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ----------------------------------------------------------------------------
 # UTILITY FUNCTIONS
 # ----------------------------------------------------------------------------
 
-# Function to clear screen and move cursor to top
 clear_screen() {
     echo -ne "\033[H"
     clear
 }
 
-# Wait for user input (Enter key)
 press_enter() {
     echo -ne "\n${CLR_CYAN}Press [Enter] to continue...${CLR_RESET}"
     read -r
 }
 
-# Print a centered line
 print_center() {
     local text="$1"
-    local width=$(tput cols)
+    local width=$(tput cols 2>/dev/null || echo 80)
     local padding=$(( (width - ${#text}) / 2 ))
     printf "%${padding}s%s%${padding}s\n" '' "$text" ''
 }
 
-# Draw a header box
-draw_header() {
+draw_box() {
     local title="$1"
-    echo -e "${CLR_CYAN}╔════════════════════════════════════╗${CLR_RESET}"
-    printf "${CLR_CYAN}║${CLR_RESET}%*s${CLR_CYAN}%*s${CLR_RESET}\n" $(((47-${#title})/2)) '' "$title" $(((47-${#title})/2)) ''
-    echo -e "${CLR_CYAN}╚════════════════════════════════════╝${CLR_RESET}"
+    local col="$2"
+    if [ -z "$col" ]; then col="$CLR_CYAN"; fi
+    echo -e "${col}╔════════════════════════════════════╗${CLR_RESET}"
+    printf "${col}║${CLR_RESET}%*s${col}%*s${CLR_RESET}\n" $(((47-${#title})/2)) '' "$title" $(((47-${#title})/2)) ''
+    echo -e "${col}╚════════════════════════════════════╝${CLR_RESET}"
 }
 
 # ----------------------------------------------------------------------------
-# BOOT SCREEN ANIMATION
+# SINGLE MULTI-COLOR PROGRESS BAR
 # ----------------------------------------------------------------------------
-boot_sequence() {
-    clear_screen
-    
-    # 1. Title Screen
-    echo -e "${CLR_CYAN}"
-    cat << 'EOF'
-   ╔════════════════════════════╗
-   ║       GT INSTALLER         ║
-   ╚════════════════════════════╝
-EOF
-    echo -e "${CLR_RESET}"
-    
-    echo ""
-    print_center "Initializing System..."
-    echo ""
 
-    # 2. Animated Progress Bar
-    local total=40
+draw_progress() {
     local percent=0
-    
     while [ $percent -le 100 ]; do
-        # Calculate color based on percentage
         local color="$CLR_RESET"
         if [ $percent -le 25 ]; then
             color="$CLR_RED"
@@ -93,8 +67,8 @@ EOF
             color="$CLR_GREEN"
         fi
 
-        # Draw Bar
         printf "\r${color}["
+        local total=20
         local filled=$((percent * total / 100))
         local empty=$((total - filled))
         
@@ -103,10 +77,29 @@ EOF
         
         printf "] %d%%%s" "$percent" "$CLR_RESET"
         
-        sleep 0.05 # Animation speed
+        sleep 0.03
         ((percent++))
     done
+}
 
+# ----------------------------------------------------------------------------
+# BOOT SCREEN
+# ----------------------------------------------------------------------------
+
+boot_screen() {
+    clear_screen
+    echo -e "${CLR_CYAN}"
+    cat << 'EOF'
+   ╔════════════════════════════╗
+   ║       GT INSTALLER         ║
+   ╚════════════════════════════╝
+EOF
+    echo -e "${CLR_RESET}"
+    echo ""
+    print_center "Initializing..."
+    echo ""
+    echo -ne "  "
+    draw_progress
     echo ""
     echo ""
     print_center "${CLR_GREEN}✓ Loading Complete!${CLR_RESET}"
@@ -114,96 +107,49 @@ EOF
 }
 
 # ----------------------------------------------------------------------------
-# INSTALLATION EXECUTION LOGIC
+# MAIN MENU
 # ----------------------------------------------------------------------------
 
-run_installer_stages() {
-    clear_screen
-    draw_header "INSTALLATION PROCESS"
-
-    # Stage 1
-    echo -e "${CLR_WHITE}[${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}] 100% Preparing Installer${CLR_RESET}"
-    echo -e "${CLR_GREEN}✓ Complete${CLR_RESET}"
-    sleep 1
-    echo ""
-
-    # Stage 2
-    echo -e "${CLR_WHITE}[${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}] 100% Loading Configuration${CLR_RESET}"
-    echo -e "${CLR_GREEN}✓ Complete${CLR_RESET}"
-    sleep 1
-    echo ""
-
-    # Stage 3
-    echo -e "${CLR_WHITE}[${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}${BOX_H}] 100% Finalizing Setup${CLR_RESET}"
-    echo -e "${CLR_GREEN}✓ Complete${CLR_RESET}"
-    sleep 1
-    echo ""
-    echo ""
-}
-
-# Logic for [1] Crispy Adventure
-install_crispy() {
-    run_installer_stages
-
-    echo -e "${CLR_CYAN}Starting Crispy Adventure Setup...${CLR_RESET}"
-    echo ""
-
-    # Check for root (apt commands need root)
-    if [ "$EUID" -ne 0 ]; then 
-        echo -e "${CLR_RED}Error: This installation requires root privileges.${CLR_RESET}"
-        echo -e "${CLR_YELLOW}Please run: sudo bash install.sh${CLR_RESET}"
-        press_enter
-        return
-    fi
-
-    echo "[1] Cloning repository..."
-    if ! git clone https://github.com/pratikgamer11/crispy-adventure; then
-        echo -e "${CLR_RED}Error: Git clone failed. Check internet connection.${CLR_RESET}"
-        press_enter
-        return
-    fi
-
-    echo "[2] Entering directory..."
-    cd crispy-adventure || { echo "Error entering directory"; press_enter; return; }
-
-    echo "[3] Updating apt..."
-    if ! apt update -y; then
-        echo "Warning: apt update failed. Continuing..."
-    fi
-
-    echo "[4] Installing Node.js..."
-    if ! apt install nodejs -y; then
-        echo "Warning: Node.js install failed. Checking if exists..."
-    fi
-
-    echo "[5] Installing dependencies (express, fer)..."
-    npm install express
-    npm install fer # Note: 'fer' is not a standard package, script runs exactly as requested
-
-    echo "[6] Starting server..."
-    echo ""
-    echo -e "${CLR_GREEN}Crispy Adventure is running!${CLR_RESET}"
-    echo -e "${CLR_YELLOW}Use Ctrl+C to stop the server and return to menu.${CLR_RESET}"
-    
-    node .
-}
-
-# Logic for Placeholders
-install_placeholder() {
-    run_installer_stages
-    echo -e "${CLR_YELLOW}This service is currently under development.${CLR_RESET}"
-    press_enter
+main_menu() {
+    while true; do
+        clear_screen
+        draw_box "GT INSTALLER"
+        
+        echo -e "${CLR_CYAN}"
+        cat << 'EOF'
+██████╗ ████████╗
+██╔════╝ ╚══██╔══╝
+██║  ███╗   ██║
+██║   ██║   ██║
+╚██████╔╝   ██║
+╚═════╝    ╚═╝
+EOF
+        echo -e "${CLR_RESET}"
+        echo ""
+        echo -e " [1] ${CLR_GREEN}Panel${CLR_RESET}"
+        echo -e " [0] ${CLR_RED}Exit${CLR_RESET}"
+        echo ""
+        
+        printf "Select: "
+        read -r opt
+        
+        case $opt in
+            1) panel_menu ;;
+            0) clear_screen; exit 0 ;;
+            *) ;;
+        esac
+    done
 }
 
 # ----------------------------------------------------------------------------
-# MENUS
+# PANEL MENU
 # ----------------------------------------------------------------------------
 
-# Panel Sub-Menu
 panel_menu() {
     while true; do
         clear_screen
-        draw_header "PANELS"
+        draw_box "PANELS"
+        
         echo ""
         echo -e " [1] ${CLR_GREEN}Crispy Adventure${CLR_RESET}"
         echo -e " [2] ${CLR_YELLOW}Coming Soon${CLR_RESET}"
@@ -211,3 +157,77 @@ panel_menu() {
         echo ""
         echo -e " [0] ${CLR_RED}Back${CLR_RESET}"
         echo ""
+        
+        printf "Select: "
+        read -r opt
+        
+        case $opt in
+            1) install_crispy ;;
+            2) install_coming_soon ;;
+            3) install_coming_soon ;;
+            0) return ;;
+            *) ;;
+        esac
+    done
+}
+
+# ----------------------------------------------------------------------------
+# INSTALLATION PROCESS
+# ----------------------------------------------------------------------------
+
+run_progress() {
+    clear_screen
+    draw_box "INSTALLING"
+    echo ""
+    echo -ne "  "
+    draw_progress
+    echo ""
+    echo ""
+    print_center "${CLR_GREEN}✓ Complete!${CLR_RESET}"
+    sleep 1
+}
+
+# ----------------------------------------------------------------------------
+# INSTALL FUNCTIONS
+# ----------------------------------------------------------------------------
+
+install_crispy() {
+    run_progress
+    
+    if [ "$EUID" -ne 0 ]; then 
+        echo ""
+        echo -e "${CLR_RED}Error: Root required. Run with sudo.${CLR_RESET}"
+        press_enter
+        return
+    fi
+    
+    echo ""
+    echo "Installing Crispy Adventure..."
+    echo ""
+    
+    git clone https://github.com/pratikgamer11/crispy-adventure
+    cd crispy-adventure || { echo "Error"; press_enter; return; }
+    
+    apt update -y
+    apt install nodejs -y
+    npm install express
+    npm install fer
+    
+    echo ""
+    echo -e "${CLR_GREEN}✓ Running Server...${CLR_RESET}"
+    node .
+}
+
+install_coming_soon() {
+    run_progress
+    echo ""
+    echo -e "${CLR_YELLOW}Coming Soon!${CLR_RESET}"
+    press_enter
+}
+
+# ----------------------------------------------------------------------------
+# START
+# ----------------------------------------------------------------------------
+
+boot_screen
+main_menu
