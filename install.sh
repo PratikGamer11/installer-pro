@@ -1,15 +1,41 @@
 #!/bin/bash
 
+# ===== COLORS =====
 RED='\033[1;91m'
-PURPLE='\033[1;95m'
-CYAN='\033[1;96m'
 GREEN='\033[1;92m'
 YELLOW='\033[1;93m'
+BLUE='\033[1;94m'
+PURPLE='\033[1;95m'
+CYAN='\033[1;96m'
 WHITE='\033[1;97m'
 NC='\033[0m'
 
-progress_step() {
-    local msg="$1"
+# ===== SPINNER =====
+spinner() {
+    local pid=$1
+    local delay=0.08
+    local spin='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+
+    while ps -p $pid >/dev/null 2>&1; do
+        for i in $(seq 0 9); do
+            printf "\r${CYAN}[%s] Loading...${NC}" "${spin:$i:1}"
+            sleep $delay
+        done
+    done
+
+    printf "\r${GREEN}[✓] Complete!          ${NC}\n"
+}
+
+# ===== LOADING BAR =====
+loading() {
+
+    clear
+
+    echo
+    echo -e "${PURPLE}╔════════════════════════════════════════════╗"
+    echo -e "║             GT INSTALLER BOOT             ║"
+    echo -e "╚════════════════════════════════════════════╝${NC}"
+    echo
 
     for i in {0..100}; do
 
@@ -23,42 +49,29 @@ progress_step() {
             COLOR=$GREEN
         fi
 
-        filled=$((i / 5))
-        empty=$((20 - filled))
+        filled=$((i / 2))
+        empty=$((50 - filled))
 
         bar=$(printf "%0.s█" $(seq 1 $filled))
-        spaces=$(printf "%0.s░" $(seq 1 $empty))
+        space=$(printf "%0.s░" $(seq 1 $empty))
 
-        printf "\r${COLOR}[%s%s] %3d%% ${msg}${NC}" \
-            "$bar" "$spaces" "$i"
+        printf "\r${COLOR}[%s%s] %3d%%${NC}" \
+        "$bar" "$space" "$i"
 
-        sleep 0.01
+        sleep 0.015
     done
 
     echo
-}
-
-loading_screen() {
-    clear
-
-    echo -e "${WHITE}"
-    echo "╔════════════════════════════╗"
-    echo "║       GT INSTALLER         ║"
-    echo "╚════════════════════════════╝"
-    echo -e "${NC}"
-
-    progress_step "Booting GT Installer"
-
     echo
-    echo -e "${GREEN}✓ System Ready${NC}"
+    echo -e "${GREEN}✓ GT Installer Loaded Successfully${NC}"
 
-    sleep 1
+    sleep 1.5
 }
 
-banner() {
-    clear
+# ===== LOGO =====
+logo() {
 
-    echo -e "${CYAN}"
+echo -e "${PURPLE}"
 cat << "EOF"
 
  ██████╗ ████████╗
@@ -68,122 +81,136 @@ cat << "EOF"
 ╚██████╔╝   ██║
  ╚═════╝    ╚═╝
 
-      GT INSTALLER
-
 EOF
-    echo -e "${NC}"
+
+echo -e "${CYAN}              GT INSTALLER v1.0${NC}"
+echo
 }
 
-crispy_adventure() {
+# ===== HEADER =====
+header() {
 
-    clear
+clear
 
-    echo -e "${CYAN}Starting Crispy Adventure Setup...${NC}"
-    echo
+echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+logo
+echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
 
-    progress_step "Cloning Repository"
-    echo -e "${GREEN}✓ Repository Ready${NC}"
+echo -e "${YELLOW}┌──────────────────────────────────────────┐${NC}"
+echo -e "${YELLOW}│ Status  : ${GREEN}ONLINE${YELLOW}                         │${NC}"
+echo -e "${YELLOW}│ Theme   : ${PURPLE}RGB PRO${YELLOW}                        │${NC}"
+echo -e "${YELLOW}│ Version : ${CYAN}1.0.0${YELLOW}                          │${NC}"
+echo -e "${YELLOW}└──────────────────────────────────────────┘${NC}"
 
-    progress_step "Updating Packages"
-    echo -e "${GREEN}✓ Packages Updated${NC}"
-
-    progress_step "Installing Dependencies"
-    echo -e "${GREEN}✓ Dependencies Installed${NC}"
-
-    progress_step "Preparing Application"
-    echo -e "${GREEN}✓ Application Prepared${NC}"
-
-    progress_step "Launching"
-    echo -e "${GREEN}✓ Launch Complete${NC}"
-
-    echo
-    read -p "Press Enter To Return..."
+echo
 }
 
+# ===== PANEL MENU =====
 panel_menu() {
 
 while true; do
 
+header
+
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║                 PANELS                     ║${NC}"
+echo -e "${GREEN}╠════════════════════════════════════════════╣${NC}"
+echo -e "${WHITE}║ ${GREEN}[1]${WHITE} ► Crispy Adventure                ║${NC}"
+echo -e "${WHITE}║ ${YELLOW}[2]${WHITE} ► Coming Soon                     ║${NC}"
+echo -e "${WHITE}║ ${YELLOW}[3]${WHITE} ► Coming Soon                     ║${NC}"
+echo -e "${WHITE}║                                            ║${NC}"
+echo -e "${WHITE}║ ${RED}[0]${WHITE} ► Back                            ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+
+echo
+read -p "Select Option > " choice
+
+case $choice in
+
+1)
     clear
 
-    echo -e "${GREEN}"
-    echo "╔════════════════════════════╗"
-    echo "║          PANELS            ║"
-    echo "╚════════════════════════════╝"
-    echo -e "${NC}"
+    echo -e "${CYAN}Launching Crispy Adventure...${NC}"
 
-    echo -e "${GREEN}[1]${NC} Crispy Adventure"
-    echo -e "${YELLOW}[2]${NC} Coming Soon"
-    echo -e "${YELLOW}[3]${NC} Coming Soon"
+    (
+        sleep 3
+    ) &
+
+    spinner $!
+
     echo
-    echo -e "${RED}[0]${NC} Back"
+    echo -e "${GREEN}✓ Placeholder Installer Selected${NC}"
     echo
+    read -p "Press Enter To Continue..."
+    ;;
 
-    read -p "Select Option: " opt
+2)
+    echo
+    echo -e "${YELLOW}Coming Soon...${NC}"
+    sleep 1.5
+    ;;
 
-    case $opt in
+3)
+    echo
+    echo -e "${YELLOW}Coming Soon...${NC}"
+    sleep 1.5
+    ;;
 
-        1)
-            crispy_adventure
-            ;;
+0)
+    return
+    ;;
 
-        2)
-            echo "Coming Soon..."
-            sleep 1
-            ;;
+*)
+    echo
+    echo -e "${RED}Invalid Option${NC}"
+    sleep 1
+    ;;
 
-        3)
-            echo "Coming Soon..."
-            sleep 1
-            ;;
-
-        0)
-            return
-            ;;
-
-        *)
-            echo "Invalid Option"
-            sleep 1
-            ;;
-
-    esac
+esac
 
 done
 }
 
+# ===== MAIN MENU =====
 main_menu() {
 
 while true; do
 
-    banner
+header
 
-    echo -e "${GREEN}[1] Panel${NC}"
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║                MAIN MENU                   ║${NC}"
+echo -e "${GREEN}╠════════════════════════════════════════════╣${NC}"
+echo -e "${WHITE}║ ${GREEN}[1]${WHITE} ► PANELS                          ║${NC}"
+echo -e "${WHITE}║                                            ║${NC}"
+echo -e "${WHITE}║ ${RED}[0]${WHITE} ► EXIT                           ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+
+echo
+read -p "Select Option > " choice
+
+case $choice in
+
+1)
+    panel_menu
+    ;;
+
+0)
+    clear
+    echo -e "${GREEN}Thanks For Using GT Installer!${NC}"
+    exit 0
+    ;;
+
+*)
     echo
-    echo -e "${RED}[0] Exit${NC}"
-    echo
+    echo -e "${RED}Invalid Option${NC}"
+    sleep 1
+    ;;
 
-    read -p "Select Option: " choice
-
-    case $choice in
-
-        1)
-            panel_menu
-            ;;
-
-        0)
-            clear
-            exit 0
-            ;;
-
-        *)
-            echo "Invalid Option"
-            sleep 1
-            ;;
-
-    esac
+esac
 
 done
 }
 
-loading_screen
+loading
 main_menu
